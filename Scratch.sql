@@ -99,12 +99,15 @@ select
         when PRIMARY_SSIC_DESCRIPTION is null then 'Invalid'
         else 'Valid'
     end,
-    case when t1.industry is null then 'No Industry' else 'With Industry' end,
+    case
+        when T1.INDUSTRY is null then 'No Industry'
+        else 'With Industry'
+    end,
     COUNT(distinct T1.COMPANY_ID),
-    sum(TOTAL_GTV),
-    sum(TOTAL_REVENUE),
-    sum(TOTAL_NET_REVENUE),
-    sum(TOTAL_TX_COUNT)
+    SUM(TOTAL_GTV),
+    SUM(TOTAL_REVENUE),
+    SUM(TOTAL_NET_REVENUE),
+    SUM(TOTAL_TX_COUNT)
 from
     (
         select
@@ -113,14 +116,22 @@ from
         from
             CBM.CARDUP_DB_REPORTING.COMPANY_DATA T1
             left outer join DEV.SBOX_ADITHYA.SG_GOV_ADDITIONAL_DATA T2 on LOWER(T1.UEN) = LOWER(T2.UEN)
-    ) T1 
+    ) T1
     join PAYMENTS T2 on T1.COMPANY_ID = T2.COMPANY_ID
-    join (select distinct company_id from CBM.CARDUP_DB_REPORTING.USER_DATA where status='Active' and CU_LOCALE_ID = 1) T3 on T1.COMPANY_ID = T3.COMPANY_ID
+    join (
+        select distinct
+            COMPANY_ID
+        from
+            CBM.CARDUP_DB_REPORTING.USER_DATA
+        where
+            STATUS = 'Active'
+            and CU_LOCALE_ID = 1
+    ) T3 on T1.COMPANY_ID = T3.COMPANY_ID
 where
-    t1.CU_LOCALE_ID = 1
+    T1.CU_LOCALE_ID = 1
 group by
-    1,2;
-
+    1,
+    2;
 
 --valid vs invalid uen, metrics, 2024 onwards only
 with
@@ -147,12 +158,15 @@ select
         when PRIMARY_SSIC_DESCRIPTION is null then 'Invalid'
         else 'Valid'
     end,
-    case when t1.industry is null then 'No Industry' else 'With Industry' end,
+    case
+        when T1.INDUSTRY is null then 'No Industry'
+        else 'With Industry'
+    end,
     COUNT(distinct T1.COMPANY_ID),
-    sum(TOTAL_GTV),
-    sum(TOTAL_REVENUE),
-    sum(TOTAL_NET_REVENUE),
-    sum(TOTAL_TX_COUNT)
+    SUM(TOTAL_GTV),
+    SUM(TOTAL_REVENUE),
+    SUM(TOTAL_NET_REVENUE),
+    SUM(TOTAL_TX_COUNT)
 from
     (
         select
@@ -161,14 +175,22 @@ from
         from
             CBM.CARDUP_DB_REPORTING.COMPANY_DATA T1
             left outer join DEV.SBOX_ADITHYA.SG_GOV_ADDITIONAL_DATA T2 on LOWER(T1.UEN) = LOWER(T2.UEN)
-    ) T1 
+    ) T1
     join PAYMENTS T2 on T1.COMPANY_ID = T2.COMPANY_ID
-    join (select distinct company_id from CBM.CARDUP_DB_REPORTING.USER_DATA where status='Active' and CU_LOCALE_ID = 1) T3 on T1.COMPANY_ID = T3.COMPANY_ID
+    join (
+        select distinct
+            COMPANY_ID
+        from
+            CBM.CARDUP_DB_REPORTING.USER_DATA
+        where
+            STATUS = 'Active'
+            and CU_LOCALE_ID = 1
+    ) T3 on T1.COMPANY_ID = T3.COMPANY_ID
 where
-    t1.CU_LOCALE_ID = 1
+    T1.CU_LOCALE_ID = 1
 group by
-    1,2;
-
+    1,
+    2;
 
 --all companies
 with
@@ -191,13 +213,13 @@ with
             1
     )
 select
-   T1.COMPANY_ID,
-   T1.industry,
-   T1.PRIMARY_SSIC_DESCRIPTION,
-    sum(TOTAL_GTV),
-    sum(TOTAL_REVENUE),
-    sum(TOTAL_NET_REVENUE),
-    sum(TOTAL_TX_COUNT)
+    T1.COMPANY_ID,
+    T1.INDUSTRY,
+    T1.PRIMARY_SSIC_DESCRIPTION,
+    SUM(TOTAL_GTV),
+    SUM(TOTAL_REVENUE),
+    SUM(TOTAL_NET_REVENUE),
+    SUM(TOTAL_TX_COUNT)
 from
     (
         select
@@ -206,17 +228,59 @@ from
         from
             CBM.CARDUP_DB_REPORTING.COMPANY_DATA T1
             left outer join DEV.SBOX_ADITHYA.SG_GOV_ADDITIONAL_DATA T2 on LOWER(T1.UEN) = LOWER(T2.UEN)
-    ) T1 
+    ) T1
     join PAYMENTS T2 on T1.COMPANY_ID = T2.COMPANY_ID
-    join (select distinct company_id from CBM.CARDUP_DB_REPORTING.USER_DATA where status='Active' and CU_LOCALE_ID = 1) T3 on T1.COMPANY_ID = T3.COMPANY_ID
+    join (
+        select distinct
+            COMPANY_ID
+        from
+            CBM.CARDUP_DB_REPORTING.USER_DATA
+        where
+            STATUS = 'Active'
+            and CU_LOCALE_ID = 1
+    ) T3 on T1.COMPANY_ID = T3.COMPANY_ID
 where
-    t1.CU_LOCALE_ID = 1
+    T1.CU_LOCALE_ID = 1
 group by
-    1,2,3;
-
+    1,
+    2,
+    3;
 
 --list of industries, SSIC
-select distinct primary_ssic_description from DEV.SBOX_ADITHYA.SG_GOV_ADDITIONAL_DATA;
+select distinct
+    PRIMARY_SSIC_DESCRIPTION
+from
+    DEV.SBOX_ADITHYA.SG_GOV_ADDITIONAL_DATA;
 
 --list of industries, CU
-select distinct industry from CBM.CARDUP_DB_REPORTING.COMPANY_DATA;
+select distinct
+    INDUSTRY
+from
+    CBM.CARDUP_DB_REPORTING.COMPANY_DATA;
+
+--matching query for ARD
+select
+    T2.PRIMARY_SSIC_DESCRIPTION,
+    T1.*
+from
+    CBM.CARDUP_DB_REPORTING.COMPANY_DATA T1
+    left outer join DEV.SBOX_ADITHYA.SG_GOV_ADDITIONAL_DATA T2 on LOWER(T1.UEN) = LOWER(T2.UEN);
+
+select
+    *
+from
+    CDM.COUNTERPARTY.CARDUP_COMPANY_T
+limit
+    10;
+
+select
+    T1.*,
+    T3.L1_INDUSTRY CU_COMPANY_L1_INDUSTRY,
+    T3.L2_INDUSTRY CU_COMPANY_L2_INDUSTRY,
+    T3.L3_INDUSTRY CU_COMPANY_L3_INDUSTRY
+from
+    CDM.COUNTERPARTY.CARDUP_COMPANY_T T1
+    JOIN DEV.SBOX_ADITHYA.SG_GOV_ADDITIONAL_DATA T2 on T1.CU_COMPANY_UEN = T2.UEN --sbox table to be replaced
+    JOIN DEV.SBOX_SHILTON.CU_B2B_INDUSTRY_MATCHING T3 on T3.L3_INDUSTRY = T2.PRIMARY_SSIC_DESCRIPTION --temp table uploaded with csv
+where
+    T1.COMPANY_CU_LOCALE_ID = 1;
